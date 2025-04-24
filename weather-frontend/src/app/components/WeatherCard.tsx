@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 
 type WeatherCardProps = {
   city: string;
@@ -20,26 +20,20 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
   unit = 'C'
 }) => {
   return (
-    <div className="p-6 rounded-xl shadow-lg bg-white/90 dark:bg-gray-800 text-center space-y-4 transition-all hover:scale-[1.02] hover:shadow-xl">
-      <h2 className="text-2xl font-bold text-gray-800 dark:text-white">{city}</h2>
-      <p className="text-sm text-gray-500 dark:text-gray-400">{date}</p>
-      <div className="flex justify-center items-center">
-        <img 
-          src={iconUrl} 
-          alt={description} 
-          className="mx-auto w-24 h-24 drop-shadow-md" 
-        />
+    <div className="card bg-base-100 shadow-md">
+      <div className="card-body items-center text-center">
+        <h2 className="card-title text-2xl">{city}</h2>
+        <p className="text-sm opacity-50">{date}</p>
+        <img src={iconUrl} alt={description} className="w-24 h-24 my-4" />
+        <div className="flex items-baseline gap-2">
+          <span className="text-5xl font-bold">{temperature}</span>
+          <span className="text-3xl">°{unit}</span>
+        </div>
+        <p className="text-lg capitalize my-2">{description}</p>
+        {feelsLike && (
+          <p className="text-sm opacity-75">Feels like: {feelsLike}°{unit}</p>
+        )}
       </div>
-      <div className="flex justify-center items-baseline gap-2">
-        <p className="text-5xl font-bold text-gray-800 dark:text-white">{temperature}°</p>
-        <span className="text-xl text-gray-600 dark:text-gray-300">{unit}</span>
-      </div>
-      <p className="text-lg capitalize text-gray-700 dark:text-gray-300">{description}</p>
-      {feelsLike && (
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          Feels like: {feelsLike}°{unit}
-        </p>
-      )}
     </div>
   );
 };

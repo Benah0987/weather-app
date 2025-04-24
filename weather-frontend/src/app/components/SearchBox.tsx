@@ -21,7 +21,7 @@ export default function SearchBox({ onSearch, isLoading = false }: SearchBoxProp
     <form onSubmit={handleSubmit} className="flex gap-2 w-full max-w-md mb-6">
       <input
         type="text"
-        className="input input-bordered w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+        className="input input-bordered w-full"
         placeholder="Enter city name (e.g., New York, London)"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
