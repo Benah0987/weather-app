@@ -7,14 +7,37 @@ import WeatherCard from './components/WeatherCard';
 import WeatherForecast from './components/WeatherForecast';
 import WeatherStats from './components/WeatherStats';
 
-// Sample data to render the UI (as per the wireframe)
-const sampleForecast = [
-  { date: '27 May', iconUrl: '/icons/sunny.png', tempMax: 18, tempMin: 14, description: 'Sunny' },
-  { date: '28 May', iconUrl: '/icons/sunny.png', tempMax: 20, tempMin: 16, description: 'Sunny' },
-  { date: '29 May', iconUrl: '/icons/sunny.png', tempMax: 19, tempMin: 15, description: 'Sunny' },
-];
+const formatDate = (date: Date): string => {
+  const day = date.getDate();
+  const month = date.toLocaleString('default', { month: 'long' });
+  const year = date.getFullYear();
 
-// Utility function to export data as CSV
+  const ordinalSuffix = (day: number): string => {
+    if (day > 3 && day < 21) return 'th';
+    switch (day % 10) {
+      case 1: return 'st';
+      case 2: return 'nd';
+      case 3: return 'rd';
+      default: return 'th';
+    }
+  };
+
+  return `${day}${ordinalSuffix(day)} ${month} ${year}`;
+};
+
+const today = new Date();
+const sampleForecast = Array.from({ length: 3 }, (_, index) => {
+  const forecastDate = new Date(today);
+  forecastDate.setDate(today.getDate() + index + 1);
+  return {
+    date: formatDate(forecastDate).split(' ')[0] + ' ' + formatDate(forecastDate).split(' ')[1],
+    icon: 'sun',
+    tempMax: 18 + index,
+    tempMin: 14 + index,
+    description: 'Sunny',
+  };
+});
+
 const exportToCSV = (
   currentWeather: { city: string; date: string; temperature: number; description: string; unit: string },
   forecast: Array<{ date: string; tempMax: number; tempMin: number; description: string }>,
@@ -51,10 +74,12 @@ export default function Page() {
   const [isLoading, setIsLoading] = useState(false);
   const [city, setCity] = useState('Nairobi');
 
+  const todayFormatted = formatDate(today);
+
   const handleSearch = (cityName: string) => {
     setIsLoading(true);
     setCity(cityName);
-    setTimeout(() => setIsLoading(false), 1000); // Simulate API call
+    setTimeout(() => setIsLoading(false), 1000);
   };
 
   const handleToggleUnit = () => {
@@ -71,7 +96,7 @@ export default function Page() {
   const handleExport = () => {
     const currentWeather = {
       city,
-      date: '20th May 2027',
+      date: todayFormatted,
       temperature: convertTemp(13),
       description: 'Sunny',
       unit: currentUnit,
@@ -85,10 +110,13 @@ export default function Page() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center p-6">
-      <div className="w-full max-w-4xl flex flex-wrap justify-between items-center gap-4 mb-6">
-        <SearchBox onSearch={handleSearch} isLoading={isLoading} />
-        <div className="flex gap-2">
+    <div className="min-h-screen flex flex-col items-center p-4 sm:p-6 lg:p-8 bg-base-100">
+      {/* Header Section */}
+      <div className="w-full max-w-5xl flex flex-col sm:flex-row justify-between items-center gap-4 mb-10">
+        <div className="w-full sm:w-1/2">
+          <SearchBox onSearch={handleSearch} isLoading={isLoading} />
+        </div>
+        <div className="flex gap-3">
           <UnitToggle onToggle={handleToggleUnit} currentUnit={currentUnit} isLoading={isLoading} />
           <button onClick={handleExport} className="btn btn-primary" disabled={isLoading}>
             Export Data
@@ -96,18 +124,21 @@ export default function Page() {
         </div>
       </div>
 
-      <div className="w-full max-w-4xl flex flex-col md:flex-row gap-6">
+      {/* Main Content */}
+      <div className="w-full max-w-5xl flex flex-col lg:flex-row gap-6">
+        {/* Left: Current Weather */}
         <div className="flex-1">
           <WeatherCard
             city={city}
-            date="20th May 2027"
-            iconUrl="/icons/sunny-cloud.png"
+            date={todayFormatted}
+            icon="sun"
             temperature={convertTemp(13)}
             description="Sunny"
             unit={currentUnit}
           />
         </div>
 
+        {/* Right: Forecast and Stats */}
         <div className="flex-1 flex flex-col gap-6">
           <WeatherForecast
             forecast={sampleForecast}

@@ -1,10 +1,11 @@
 import React from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSun } from '@fortawesome/free-solid-svg-icons'; // Import the sun icon
 
-// Export the type
 export type WeatherCardProps = {
   city: string;
   date: string;
-  iconUrl: string;
+  icon: string; // Changed from iconUrl to icon (Font Awesome icon name)
   temperature: number;
   description: string;
   feelsLike?: number;
@@ -14,7 +15,7 @@ export type WeatherCardProps = {
 const WeatherCard: React.FC<WeatherCardProps> = ({
   city,
   date,
-  iconUrl,
+  icon,
   temperature,
   description,
   feelsLike,
@@ -28,7 +29,7 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
           <p className="text-sm opacity-50">{date}</p>
         </div>
         <div className="flex flex-col items-center text-center">
-          <img src={iconUrl} alt={description} className="w-24 h-24 my-4" />
+          <FontAwesomeIcon icon={faSun} className="w-24 h-24 my-4 text-yellow-500" />
           <div className="flex items-baseline gap-2">
             <span className="text-5xl font-bold">{temperature}</span>
             <span className="text-3xl">°{unit}</span>

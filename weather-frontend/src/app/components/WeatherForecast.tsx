@@ -1,9 +1,10 @@
 import React from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSun } from '@fortawesome/free-solid-svg-icons';
 
-// Export the types
 export type ForecastItem = {
   date: string;
-  iconUrl: string;
+  icon: string; // Changed from iconUrl to icon
   tempMax: number;
   tempMin: number;
   description: string;
@@ -23,7 +24,7 @@ const WeatherForecast: React.FC<WeatherForecastProps> = ({ forecast, unit, conve
         {forecast.map((day, index) => (
           <div key={index} className="flex flex-col items-center p-4 bg-base-200 rounded-lg">
             <h3 className="font-semibold">{day.date}</h3>
-            <img src={day.iconUrl} alt={day.description} className="w-16 h-16 my-2" />
+            <FontAwesomeIcon icon={faSun} className="w-16 h-16 my-2 text-yellow-500" />
             <div className="flex gap-4">
               <div className="text-center">
                 <p className="text-sm text-gray-500">High</p>
