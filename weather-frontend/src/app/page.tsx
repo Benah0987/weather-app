@@ -1,175 +1,122 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import SearchBox from './components/SearchBox';
 import UnitToggle from './components/UnitToggle';
 import WeatherCard from './components/WeatherCard';
-import WeatherStats from './components/WeatherStats';
 import WeatherForecast from './components/WeatherForecast';
+import WeatherStats from './components/WeatherStats';
 
-type WeatherData = {
-  city: string;
-  date: string;
-  iconUrl: string;
-  temperature: number;
-  description: string;
-  feelsLike: number;
-  windSpeed: number;
-  humidity: number;
-  pressure: number;
-  visibility: number;
-  sunrise: string;
-  sunset: string;
+// Sample data to render the UI (as per the wireframe)
+const sampleForecast = [
+  { date: '27 May', iconUrl: '/icons/sunny.png', tempMax: 18, tempMin: 14, description: 'Sunny' },
+  { date: '28 May', iconUrl: '/icons/sunny.png', tempMax: 20, tempMin: 16, description: 'Sunny' },
+  { date: '29 May', iconUrl: '/icons/sunny.png', tempMax: 19, tempMin: 15, description: 'Sunny' },
+];
+
+// Utility function to export data as CSV
+const exportToCSV = (
+  currentWeather: { city: string; date: string; temperature: number; description: string; unit: string },
+  forecast: Array<{ date: string; tempMax: number; tempMin: number; description: string }>,
+  stats: { windSpeed: number; humidity: number },
+  unit: 'C' | 'F'
+) => {
+  const exportData = [
+    { type: 'Current Weather', city: currentWeather.city, date: currentWeather.date, temperature: `${currentWeather.temperature}°${unit}`, description: currentWeather.description },
+    { type: '', city: '', date: '', temperature: '', description: '' },
+    ...forecast.map((day) => ({
+      type: 'Forecast',
+      city: '',
+      date: day.date,
+      temperature: `${day.tempMax}°${unit}/${day.tempMin}°${unit}`,
+      description: day.description,
+    })),
+    { type: '', city: '', date: '', temperature: '', description: '' },
+    { type: 'Stats', city: '', date: '', temperature: '', description: `Wind Speed: ${stats.windSpeed} km/h, Humidity: ${stats.humidity}%` },
+  ];
+
+  const headers = ['Type', 'City', 'Date', 'Temperature', 'Description'].join(',');
+  const rows = exportData.map((row) => Object.values(row).join(',')).join('\n');
+  const csvContent = `${headers}\n${rows}`;
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `weather-data-${currentWeather.city}-${new Date().toISOString().split('T')[0]}.csv`;
+  link.click();
 };
 
-type ForecastData = {
-  date: string;
-  iconUrl: string;
-  tempMax: number;
-  tempMin: number;
-  description: string;
-}[];
+export default function Page() {
+  const [currentUnit, setCurrentUnit] = useState<'C' | 'F'>('C');
+  const [isLoading, setIsLoading] = useState(false);
+  const [city, setCity] = useState('Nairobi');
 
-export default function Home() {
-  const [weather, setWeather] = useState<WeatherData | null>(null);
-  const [forecast, setForecast] = useState<ForecastData | null>(null);
-  const [unit, setUnit] = useState<'C' | 'F'>('C');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const handleSearch = (cityName: string) => {
+    setIsLoading(true);
+    setCity(cityName);
+    setTimeout(() => setIsLoading(false), 1000); // Simulate API call
+  };
 
-  const fetchWeather = async (city: string) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      // First fetch coordinates using Geocoding API
-      const geoResponse = await fetch(
-        `https://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=${process.env.NEXT_PUBLIC_WEATHER_API_KEY}`
-      );
-      const geoData = await geoResponse.json();
-      
-      if (!geoData || geoData.length === 0) {
-        throw new Error('City not found');
-      }
-      
-      const { lat, lon } = geoData[0];
-      
-      // Fetch current weather
-      const weatherResponse = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${process.env.NEXT_PUBLIC_WEATHER_API_KEY}`
-      );
-      const weatherData = await weatherResponse.json();
-      
-      // Fetch forecast
-      const forecastResponse = await fetch(
-        `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=metric&appid=${process.env.NEXT_PUBLIC_WEATHER_API_KEY}`
-      );
-      const forecastData = await forecastResponse.json();
-      
-      // Process current weather data
-      const processedWeather: WeatherData = {
-        city: `${geoData[0].name}, ${geoData[0].country}`,
-        date: new Date(weatherData.dt * 1000).toLocaleDateString('en-US', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        }),
-        iconUrl: `https://openweathermap.org/img/wn/${weatherData.weather[0].icon}@2x.png`,
-        temperature: Math.round(weatherData.main.temp),
-        description: weatherData.weather[0].description,
-        feelsLike: Math.round(weatherData.main.feels_like),
-        windSpeed: Math.round(weatherData.wind.speed * 3.6), // Convert m/s to km/h
-        humidity: weatherData.main.humidity,
-        pressure: weatherData.main.pressure,
-        visibility: weatherData.visibility,
-        sunrise: new Date(weatherData.sys.sunrise * 1000).toLocaleTimeString(),
-        sunset: new Date(weatherData.sys.sunset * 1000).toLocaleTimeString()
-      };
-      
-      // Process forecast data (next 3 days)
-      const dailyForecast = forecastData.list
-        .filter((item: any, index: number) => index % 8 === 0) // Get one reading per day
-        .slice(0, 3) // Only next 3 days
-        .map((item: any) => ({
-          date: new Date(item.dt * 1000).toLocaleDateString('en-US', { weekday: 'short' }),
-          iconUrl: `https://openweathermap.org/img/wn/${item.weather[0].icon}.png`,
-          tempMax: Math.round(item.main.temp_max),
-          tempMin: Math.round(item.main.temp_min),
-          description: item.weather[0].main
-        }));
-      
-      setWeather(processedWeather);
-      setForecast(dailyForecast);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch weather data');
-      console.error(err);
-    } finally {
-      setLoading(false);
+  const handleToggleUnit = () => {
+    setCurrentUnit(currentUnit === 'C' ? 'F' : 'C');
+  };
+
+  const convertTemp = (temp: number) => {
+    if (currentUnit === 'F') {
+      return Math.round((temp * 9) / 5 + 32);
     }
+    return temp;
   };
 
-  const toggleUnit = () => {
-    setUnit(unit === 'C' ? 'F' : 'C');
-  };
-
-  const convertTemp = (temp: number): number => {
-    return unit === 'C' ? temp : Math.round((temp * 9/5) + 32);
+  const handleExport = () => {
+    const currentWeather = {
+      city,
+      date: '20th May 2027',
+      temperature: convertTemp(13),
+      description: 'Sunny',
+      unit: currentUnit,
+    };
+    const stats = { windSpeed: 3, humidity: 80 };
+    exportToCSV(currentWeather, sampleForecast.map(day => ({
+      ...day,
+      tempMax: convertTemp(day.tempMax),
+      tempMin: convertTemp(day.tempMin),
+    })), stats, currentUnit);
   };
 
   return (
-    <main className="container mx-auto px-4 py-8 min-h-screen">
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold text-center mb-8">Weather Forecast</h1>
-        
-        <SearchBox 
-          onSearch={fetchWeather} 
-          isLoading={loading} 
-        />
-        
-        {error && (
-          <div className="alert alert-error mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span>{error}</span>
-          </div>
-        )}
-        
-        {weather && (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <WeatherCard
-                city={weather.city}
-                date={weather.date}
-                iconUrl={weather.iconUrl}
-                temperature={convertTemp(weather.temperature)}
-                description={weather.description}
-                feelsLike={convertTemp(weather.feelsLike)}
-                unit={unit}
-              />
-              
-              <div>
-                <WeatherStats
-                  windSpeed={weather.windSpeed}
-                  humidity={weather.humidity}
-                  pressure={weather.pressure}
-                  visibility={weather.visibility}
-                  sunrise={weather.sunrise}
-                  sunset={weather.sunset}
-                />
-                <UnitToggle 
-                  onToggle={toggleUnit} 
-                  currentUnit={unit} 
-                  isLoading={loading}
-                />
-              </div>
-            </div>
-            
-            {forecast && <WeatherForecast forecast={forecast} unit={unit} convertTemp={convertTemp} />}
-          </>
-        )}
+    <div className="min-h-screen flex flex-col items-center p-6">
+      <div className="w-full max-w-4xl flex flex-wrap justify-between items-center gap-4 mb-6">
+        <SearchBox onSearch={handleSearch} isLoading={isLoading} />
+        <div className="flex gap-2">
+          <UnitToggle onToggle={handleToggleUnit} currentUnit={currentUnit} isLoading={isLoading} />
+          <button onClick={handleExport} className="btn btn-primary" disabled={isLoading}>
+            Export Data
+          </button>
+        </div>
       </div>
-    </main>
+
+      <div className="w-full max-w-4xl flex flex-col md:flex-row gap-6">
+        <div className="flex-1">
+          <WeatherCard
+            city={city}
+            date="20th May 2027"
+            iconUrl="/icons/sunny-cloud.png"
+            temperature={convertTemp(13)}
+            description="Sunny"
+            unit={currentUnit}
+          />
+        </div>
+
+        <div className="flex-1 flex flex-col gap-6">
+          <WeatherForecast
+            forecast={sampleForecast}
+            unit={currentUnit}
+            convertTemp={convertTemp}
+          />
+          <WeatherStats windSpeed={3} humidity={80} />
+        </div>
+      </div>
+    </div>
   );
 }

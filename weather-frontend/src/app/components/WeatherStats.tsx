@@ -1,6 +1,7 @@
 'use client';
 
-interface WeatherStatsProps {
+// Export the interface
+export interface WeatherStatsProps {
   windSpeed: number;
   humidity: number;
   pressure?: number;
@@ -33,8 +34,13 @@ const WeatherStats = ({
           <div className="stats shadow">
             <div className="stat">
               <div className="stat-title">Humidity</div>
-              <div className="stat-value text-lg">{humidity}</div>
-              <div className="stat-desc">%</div>
+              <div className="stat-value text-lg">{humidity}%</div>
+              <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                <div
+                  className="bg-blue-600 h-2.5 rounded-full"
+                  style={{ width: `${humidity}%` }}
+                ></div>
+              </div>
             </div>
           </div>
           

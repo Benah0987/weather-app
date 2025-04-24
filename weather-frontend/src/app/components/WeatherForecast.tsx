@@ -1,6 +1,7 @@
 import React from 'react';
 
-type ForecastItem = {
+// Export the types
+export type ForecastItem = {
   date: string;
   iconUrl: string;
   tempMax: number;
@@ -8,7 +9,7 @@ type ForecastItem = {
   description: string;
 };
 
-type WeatherForecastProps = {
+export type WeatherForecastProps = {
   forecast: ForecastItem[];
   unit: 'C' | 'F';
   convertTemp: (temp: number) => number;

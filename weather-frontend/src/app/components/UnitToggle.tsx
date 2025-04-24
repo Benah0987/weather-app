@@ -1,6 +1,9 @@
 'use client';
 
-interface UnitToggleProps {
+import React from 'react';
+
+// Export the interface
+export interface UnitToggleProps {
   onToggle: () => void;
   currentUnit: 'C' | 'F';
   isLoading?: boolean;
@@ -8,17 +11,20 @@ interface UnitToggleProps {
 
 const UnitToggle = ({ onToggle, currentUnit, isLoading = false }: UnitToggleProps) => {
   return (
-    <div className="unit-toggle p-2 mt-4">
+    <div className="flex gap-2 p-2">
       <button
         onClick={onToggle}
-        className={`btn w-full transition-all ${currentUnit === 'C' ? 'btn-accent' : 'btn-secondary'}`}
+        className={`btn ${currentUnit === 'C' ? 'btn-accent' : 'btn-outline'}`}
         disabled={isLoading}
       >
-        {isLoading ? (
-          <span className="loading loading-spinner"></span>
-        ) : (
-          `Switch to ${currentUnit === 'C' ? '°F' : '°C'}`
-        )}
+        °C
+      </button>
+      <button
+        onClick={onToggle}
+        className={`btn ${currentUnit === 'F' ? 'btn-accent' : 'btn-outline'}`}
+        disabled={isLoading}
+      >
+        °F
       </button>
     </div>
   );

@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 
-interface SearchBoxProps {
+// Export the interface so it can be used in other files if needed
+export interface SearchBoxProps {
   onSearch: (cityName: string) => void;
   isLoading?: boolean;
 }
