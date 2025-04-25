@@ -26,15 +26,14 @@ COPY . .
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# Run Laravel optimizations
-RUN php artisan key:generate --ansi && \
-    php artisan config:cache && \
-    php artisan route:cache && \
-    php artisan view:cache
-
-# Set permissions
+# Set permissions before running artisan commands
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+
+# Run Laravel optimizations (skip key:generate since APP_KEY will be set via env)
+RUN php artisan config:cache && \
+    php artisan route:cache && \
+    php artisan view:cache
 
 # Enable Apache rewrite module
 RUN a2enmod rewrite
